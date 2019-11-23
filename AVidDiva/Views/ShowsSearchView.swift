@@ -27,6 +27,12 @@ struct ShowsSearchView: View {
                 HStack(alignment: .center, spacing: 20) {
                     ShowImage(urlPath: show.image?.medium ?? "")
                     Text(show.name ?? "No name")
+                    Spacer()
+                    Button(action: {
+                        CloudKitAPI.shared.addOrUpdateSubscription(show: show)
+                    }) {
+                        Text("Add")
+                    }
                 }
             }
         }
