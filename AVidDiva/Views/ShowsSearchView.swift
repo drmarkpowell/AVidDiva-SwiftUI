@@ -10,28 +10,43 @@ import SwiftUI
 
 struct ShowsSearchView: View {
     @ObservedObject var showsViewModel = ShowsSearchViewModel()
+    @State var searchingForShows = false
     @State var titleText: String = ""
     var body: some View {
-        VStack {
-            HStack() {
-                TextField("TV Show Title", text: $titleText).textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding(.trailing)
-                Button(action: {
-                    self.showsViewModel.queryShows(self.titleText)
-                }) {
-                    Text("Search")
+        NavigationView {
+            VStack {
+                if searchingForShows == false {
+                    HStack() {
+                        Text("My Shows")
+                        Spacer()
+                        Button(action: {
+                            self.showsViewModel.clearShows()
+                            self.searchingForShows = true
+                        }, label: { Text("Add") })
+                    }.padding()
+                } else {
+                    HStack() {
+                        Button(action: {
+                            self.showsViewModel.showSubscribedShows()
+                            self.searchingForShows = false
+                        }) { Text("Back") }
+                        TextField("TV Show Title", text: $titleText).textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding(.trailing)
+                        Button(action: {
+                            self.showsViewModel.queryShows(self.titleText)
+                        }) {
+                            Text("Search")
+                        }
+                    }.padding()
                 }
-            }.padding()
-            
-            List(showsViewModel.showSearchResults) { show in
-                HStack(alignment: .center, spacing: 20) {
-                    ShowImage(urlPath: show.image?.medium ?? "")
-                    Text(show.name ?? "No name")
-                    Spacer()
-                    Button(action: {
-                        CloudKitAPI.shared.addOrUpdateSubscription(show: show)
-                    }) {
-                        Text("Add")
+                
+                List(showsViewModel.showSearchResults) { show in
+                    if self.searchingForShows {
+                        ShowRow(showsViewModel: self.showsViewModel, show: show, searchingForShows: true)
+                    } else {
+                        NavigationLink(destination: ShowEpisodesView(EpisodesViewModel(showId: show.id))) {
+                            ShowRow(showsViewModel: self.showsViewModel, show: show, searchingForShows: false)
+                        }
                     }
                 }
             }

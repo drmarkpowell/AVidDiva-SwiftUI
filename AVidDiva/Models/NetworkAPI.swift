@@ -16,6 +16,7 @@ public class NetworkAPI {
     private init() { }
 
     private var getShowsCancellable: AnyCancellable?
+    private var getEpisodesCancellable: AnyCancellable?
     
     /**
      * This show search only returns 10 results max, by design.
@@ -42,6 +43,21 @@ public class NetworkAPI {
                     return show
                 }
                 showConsumer(shows)
+            })
+    }
+    
+    func getEpisodes(_ showId: Int, episodeConsumer: @escaping ([TVMazeEpisode])->()) {
+        guard let url = URL(string: "https://api.tvmaze.com/shows/\(showId)/episodes?specials=1") else {
+            return
+        }
+        self.getEpisodesCancellable = URLSession.shared.dataTaskPublisher(for: url)
+            .map(\.data)
+            .decode(type: [TVMazeEpisode].self, decoder: JSONDecoder())
+            .replaceError(with: [])
+            .eraseToAnyPublisher()
+            .sink(receiveValue: { episodes in
+                print("\(episodes.count) episodes returned.")
+                episodeConsumer(episodes)
             })
     }
 }

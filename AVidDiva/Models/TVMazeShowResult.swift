@@ -8,6 +8,7 @@
 
 import Foundation
 
+//https://api.tvmaze.com/shows/38963
 public struct TVMazeShowResult: Codable {
     var show: TVMazeShow
 }
@@ -25,68 +26,55 @@ public struct TVMazeImage: Codable {
     var medium: String
 }
 
-//[
-//{
-//  "score": 30.38829,
-//  "show": {
-//    "id": 210,
-//    "url": "http://www.tvmaze.com/shows/210/doctor-who",
-//    "name": "Doctor Who",
-//    "type": "Scripted",
-//    "language": "English",
-//    "genres": [
-//      "Drama",
-//      "Adventure",
-//      "Science-Fiction"
-//    ],
-//    "status": "Running",
-//    "runtime": 45,
-//    "premiered": "2005-03-26",
-//    "officialSite": "http://www.bbc.co.uk/programmes/b006q2x0",
-//    "schedule": {
-//      "time": "",
-//      "days": [
-//        "Sunday"
-//      ]
-//    },
-//    "rating": {
-//      "average": 8.6
-//    },
-//    "weight": 98,
-//    "network": {
-//      "id": 12,
-//      "name": "BBC One",
-//      "country": {
-//        "name": "United Kingdom",
-//        "code": "GB",
-//        "timezone": "Europe/London"
-//      }
-//    },
-//    "webChannel": null,
-//    "externals": {
-//      "tvrage": 3332,
-//      "thetvdb": 78804,
-//      "imdb": "tt0436992"
-//    },
-//    "image": {
-//      "medium": "http://static.tvmaze.com/uploads/images/medium_portrait/161/404447.jpg",
-//      "original": "http://static.tvmaze.com/uploads/images/original_untouched/161/404447.jpg"
-//    },
-//    "summary": "<p>Adventures across time and space with the time travelling alien and companions.</p>",
-//    "updated": 1571902422,
-//    "_links": {
-//      "self": {
-//        "href": "http://api.tvmaze.com/shows/210"
-//      },
-//      "previousepisode": {
-//        "href": "http://api.tvmaze.com/episodes/1561480"
-//      }
-//    }
-//  }
-//},
-//{
-//  "score": 29.91501,
-//  "show": {
-//    "id": 766,
-//    "url": "http://www.tvmaze.com/shows/766/doctor-who",
-//    "name": "Doctor Who",
+//https://api.tvmaze.com/shows/210/episodes?specials=1
+public struct TVMazeEpisodes: Codable {
+    var episodes: [TVMazeEpisode]
+}
+
+public struct TVMazeEpisode: Codable, Identifiable {
+    
+    public var id: Int
+    var showId: Int?
+    var name: String?
+    var season: Int?
+    var number: Int?
+    var airdate: String?
+    var airtime: String?
+    var image: TVMazeImage?
+    var summary: String?
+    var watched: Bool?
+    
+    func subtitle() -> String {
+        let seasonNum = String("\(season ?? 0)")
+        let episodeNum = String("\(number ?? 0)")
+        let monthDay = TVMazeEpisode.formatMonthDay(TVMazeEpisode.parseDate(airdate))
+        return "S\(seasonNum)E\(episodeNum)  \(monthDay)"
+    }
+    
+    static func parseDate(_ datetext: String?) -> Date {
+        let dateFormat = DateFormatter()
+        dateFormat.dateFormat = "yyyy-MM-dd"
+        if let text = datetext {
+            if let date = dateFormat.date(from: text) {
+                return date
+            }
+        }
+        return Date(timeIntervalSince1970: 31557600*129) //year 2099
+    }
+    
+    static func formatMonthDay(_ airDate: Date) -> String {
+        let dateFormat = DateFormatter()
+        dateFormat.dateFormat = "MMM dd"
+        let monthDay = Date().timeIntervalSince(airDate) > 0 ? "  Aired " : "  Airs "
+        return monthDay + dateFormat.string(from: airDate)
+    }
+    
+    func getSummary() -> String {
+        if let summary = summary {
+            var summaryString = summary.replacingOccurrences(of: "<p>", with: "")
+            summaryString = summaryString.replacingOccurrences(of: "</p>", with: "")
+            return summaryString
+        }
+        return "No summary available."
+    }
+}
