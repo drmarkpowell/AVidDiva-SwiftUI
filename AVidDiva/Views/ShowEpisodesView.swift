@@ -47,6 +47,8 @@ struct ShowEpisodesView: View {
                     .frame(height: 60, alignment: .leading)
                 }
             }
+        }.onAppear() {
+            self.episodesViewModel.querySubscribedEpisodes()
         }
     }
 }

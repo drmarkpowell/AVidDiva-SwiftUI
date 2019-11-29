@@ -43,24 +43,7 @@ public struct TVMazeEpisodes: Codable {
     var episodes: [TVMazeEpisode]
 }
 
-public struct TVMazeEpisode: Codable, Identifiable, Comparable {
-    
-    public static func < (lhs: TVMazeEpisode, rhs: TVMazeEpisode) -> Bool {
-        if let lhsAirdate = lhs.airdate, let rhsAirdate = rhs.airdate {
-            if lhsAirdate < rhsAirdate {
-                return true
-            } else if lhsAirdate == rhsAirdate {
-                if let lhsAirtime = lhs.airtime, let rhsAirtime = rhs.airtime {
-                    return lhsAirtime < rhsAirtime
-                }
-            }
-        }
-        return lhs.id < rhs.id
-    }
-    
-    public static func == (lhs: TVMazeEpisode, rhs: TVMazeEpisode) -> Bool {
-        return lhs.id == rhs.id
-    }
+public struct TVMazeEpisode: Codable, Identifiable, Comparable, Hashable {
     
     public var id: Int
     var showId: Int?
@@ -107,4 +90,24 @@ public struct TVMazeEpisode: Codable, Identifiable, Comparable {
         return "No summary available."
     }
 
+    public static func < (lhs: TVMazeEpisode, rhs: TVMazeEpisode) -> Bool {
+        if let lhsAirdate = lhs.airdate, let rhsAirdate = rhs.airdate {
+            if lhsAirdate < rhsAirdate {
+                return true
+            } else if lhsAirdate == rhsAirdate {
+                if let lhsAirtime = lhs.airtime, let rhsAirtime = rhs.airtime {
+                    return lhsAirtime < rhsAirtime
+                }
+            }
+        }
+        return lhs.id < rhs.id
+    }
+    
+    public static func == (lhs: TVMazeEpisode, rhs: TVMazeEpisode) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    public var hashValue: Int {
+        return id
+    }
 }

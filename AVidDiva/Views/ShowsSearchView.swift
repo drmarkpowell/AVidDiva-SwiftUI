@@ -45,6 +45,8 @@ struct ShowsSearchView: View {
                         self.showsViewModel.clearShows()
                         self.searchingForShows = true
                        }))
+        }.onAppear() {
+            self.showsViewModel.querySubscribedShows()
         }
     }
 }

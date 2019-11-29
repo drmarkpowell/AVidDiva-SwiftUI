@@ -15,7 +15,6 @@ class EpisodesViewModel: ObservableObject {
     
     init(showId: Int) {
         self.showId = showId
-        querySubscribedEpisodes()
     }
     
     func querySubscribedEpisodes() {

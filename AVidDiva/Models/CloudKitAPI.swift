@@ -69,6 +69,11 @@ class CloudKitAPI {
         querySubscribedEpisodes(predicate: NSPredicate(value: true), episodeConsumer: episodeConsumer)
     }
     
+    func queryUnwatchedEpisodes(episodeConsumer: @escaping ([TVMazeEpisode])->()) {
+        let predicate = NSPredicate(format: "watched == %@", NSNumber(booleanLiteral: false))
+        querySubscribedEpisodes(predicate: predicate, episodeConsumer: episodeConsumer)
+    }
+    
     func querySubscribedEpisodes(predicate: NSPredicate, episodeConsumer: @escaping ([TVMazeEpisode])->()) {
         let query = CKQuery(recordType: "SubscribedEpisode", predicate: predicate)
         privateDB.perform(query, inZoneWith: nil) { (records, error) in

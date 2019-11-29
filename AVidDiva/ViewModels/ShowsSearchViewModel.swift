@@ -12,11 +12,7 @@ import Combine
 class ShowsSearchViewModel: ObservableObject {
     @Published var showSearchResults = [TVMazeShow]()
     var subscribedShows = [TVMazeShow]()
-    
-    init() {
-        querySubscribedShows()
-    }
-    
+        
     func showSubscribedShows() {
         showSearchResults = subscribedShows
     }

@@ -9,17 +9,17 @@
 import SwiftUI
 
 struct WatchListView: View {
-    @State private var listMode = 0
-    var settings = ["List", "Calendar"]
-
+    @ObservedObject var watchListViewModel = WatchListViewModel()
+    
     var body: some View {
-        VStack {
-            Picker("", selection: $listMode) {
-                ForEach(0 ..< settings.count) { index in
-                    Text(self.settings[index])
-                        .tag(index)
+        List {
+            ForEach(watchListViewModel.showNames, id: \.self) { section in
+                Section(header: Text(section)) {
+                    return ForEach(self.watchListViewModel.episodes[section]!, id: \.self) { episode in
+                        Text(episode.name ?? "No name")
+                    }
                 }
-            }.pickerStyle(SegmentedPickerStyle())
+            }
         }
     }
 }
