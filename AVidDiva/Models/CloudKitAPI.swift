@@ -16,6 +16,8 @@ class CloudKitAPI {
     let privateDB: CKDatabase
 
     static let shared = CloudKitAPI()
+    var showRecords = [Int:CKRecord]()
+    var episodeRecords = [Int:CKRecord]()
 
     private init() {
         container = CKContainer.default()
@@ -23,6 +25,15 @@ class CloudKitAPI {
         privateDB = container.privateCloudDatabase
     }
 
+    func toggleEpisodeWatched(episode: TVMazeEpisode, callback: @escaping (Error?)->()) {
+        if let showId = episode.showId {
+            addOrUpdateEpisode(episode: episode, showId: showId,
+                               episodeConsumer: { error in
+                callback(error)
+            })
+        }
+    }
+    
     func querySubscribedShows(showConsumer: @escaping ([TVMazeShow])->()) {
         let predicate = NSPredicate(value: true)
         let query = CKQuery(recordType: "SubscribedShow", predicate: predicate)
@@ -40,15 +51,25 @@ class CloudKitAPI {
                         }
                         show.summary = record.value(forKey: "summary") as? String
                         shows.append(show)
+                        self.showRecords[show.id] = record
                     }
                 }
+                shows.sort()
                 showConsumer(shows)
             }
         }
     }
     
-    func querySubscribedEpisodes(episodeConsumer: @escaping ([TVMazeEpisode])->()) {
-        let predicate = NSPredicate(value: true)
+    func querySubscribedEpisodes(showId: Int, episodeConsumer: @escaping ([TVMazeEpisode])->()) {
+        querySubscribedEpisodes(predicate: NSPredicate(format: "mazeShowId == %d", showId),
+                                episodeConsumer: episodeConsumer)
+    }
+    
+    func queryAllSubscribedEpisodes(episodeConsumer: @escaping ([TVMazeEpisode])->()) {
+        querySubscribedEpisodes(predicate: NSPredicate(value: true), episodeConsumer: episodeConsumer)
+    }
+    
+    func querySubscribedEpisodes(predicate: NSPredicate, episodeConsumer: @escaping ([TVMazeEpisode])->()) {
         let query = CKQuery(recordType: "SubscribedEpisode", predicate: predicate)
         privateDB.perform(query, inZoneWith: nil) { (records, error) in
             if let records = records {
@@ -57,7 +78,7 @@ class CloudKitAPI {
                     if let mazeId = record.value(forKey: "mazeId") as? Int {
                         var episode = TVMazeEpisode(id: mazeId, showId: 0, name: nil, season: nil, number: nil, airdate: nil, airtime: nil, image: nil, summary: nil, watched: nil)
                         episode.name = record.value(forKey: "name") as? String
-                        if let showId = record.value(forKey: "showId") as? Int {
+                        if let showId = record.value(forKey: "mazeShowId") as? Int {
                             episode.showId = showId
                         } else {
                             continue
@@ -71,15 +92,29 @@ class CloudKitAPI {
                         }
                         episode.summary = record.value(forKey: "summary") as? String
                         episode.watched = (record.value(forKey: "watched") as? NSNumber)?.boolValue
+                        
                         episodes.append(episode)
+                        self.episodeRecords[episode.id] = record
                     }
                 }
+                episodes.sort()
+                episodeConsumer(episodes)
             }
         }
     }
-    
-    func addOrUpdateSubscription(show: TVMazeShow, showConsumer: @escaping ()->(), update: Bool = false) {
-        let record = CKRecord(recordType: "SubscribedShow")
+        
+    func addOrUpdateSubscription(show: TVMazeShow, showConsumer: @escaping (Error?)->()) {
+        var record:CKRecord
+        var update = false
+        if let rec = showRecords[show.id] {
+            update = true
+            record = rec
+        }
+        else {
+            record = CKRecord(recordType: "SubscribedShow",
+                              recordID: CKRecord.ID(recordName: "SubscribedShow\(show.id)"))
+        }
+        
         record.setValue(show.id, forKey: "mazeId")
         if let imageLocator = show.image?.medium {
             record.setValue(imageLocator, forKey: "mediumImageLocator")
@@ -99,8 +134,17 @@ class CloudKitAPI {
         addOrUpdate(record: record, update: update, callback: showConsumer)
     }
     
-    func addOrUpdateEpisode(episode: TVMazeEpisode, showId: Int, episodeConsumer: @escaping ()->(), update: Bool = false) {
-        let record = CKRecord(recordType: "SubscribedEpisode")
+    func addOrUpdateEpisode(episode: TVMazeEpisode, showId: Int, episodeConsumer: @escaping (Error?)->()) {
+        var record:CKRecord
+        var update = false
+        if let rec = episodeRecords[episode.id] {
+            update = true
+            record = rec
+        }
+        else {
+            record = CKRecord(recordType: "SubscribedEpisode",
+                              recordID: CKRecord.ID(recordName: "SubscribedEpisode\(episode.id)"))
+        }
         record.setValue(episode.id, forKey: "mazeId")
         record.setValue(showId, forKey: "mazeShowId")
         if let name = episode.name {
@@ -124,17 +168,18 @@ class CloudKitAPI {
         if let summary = episode.summary {
             record.setValue(summary, forKey: "summary")
         }
-        record.setValue(false, forKey: "watched")
+        let watched = episode.watched ?? false
+        record.setValue(watched, forKey: "watched")
         
         addOrUpdate(record: record, update: update, callback: episodeConsumer)
     }
 
-    private func addOrUpdate(record: CKRecord, update: Bool, callback: @escaping ()->()) {
+    private func addOrUpdate(record: CKRecord, update: Bool, callback: @escaping (Error?)->()) {
         if update {
             let modifyRecordsOperation = CKModifyRecordsOperation(recordsToSave: [record])
             modifyRecordsOperation.modifyRecordsCompletionBlock = { (records, ids, error) in
                 DispatchQueue.main.async {
-                    callback()
+                    callback(error)
                 }
             }
             privateDB.add(modifyRecordsOperation)
@@ -144,7 +189,7 @@ class CloudKitAPI {
                     print("Error saving \(String(describing: record)): \(String(describing: error))")
                 }
                 DispatchQueue.main.async {
-                    callback()
+                    callback(error)
                 }
             }
         }

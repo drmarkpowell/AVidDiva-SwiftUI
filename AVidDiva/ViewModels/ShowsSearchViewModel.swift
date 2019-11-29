@@ -22,7 +22,7 @@ class ShowsSearchViewModel: ObservableObject {
     }
     
     func addOrUpdateSubscription(show: TVMazeShow) {
-        CloudKitAPI.shared.addOrUpdateSubscription(show: show, showConsumer: {
+        CloudKitAPI.shared.addOrUpdateSubscription(show: show, showConsumer: { error in
             self.subscribedShows.append(show)
             print("show added")
             self.queryEpisodes(showId: show.id)
@@ -31,7 +31,8 @@ class ShowsSearchViewModel: ObservableObject {
     
     func addToSubscribedEpisodes(episodes: [TVMazeEpisode], showId: Int) {
         for episode in episodes {
-            CloudKitAPI.shared.addOrUpdateEpisode(episode: episode, showId: showId, episodeConsumer: {
+            CloudKitAPI.shared.addOrUpdateEpisode(episode: episode, showId: showId,
+                                                  episodeConsumer: { error in
                 print("added subscribed episode")
             })
         }
@@ -47,7 +48,7 @@ class ShowsSearchViewModel: ObservableObject {
             }
         })
     }
-    
+        
     func queryEpisodes(showId: Int) {
         NetworkAPI.shared.getEpisodes(showId, episodeConsumer: { episodes in
             print("episodes queried")

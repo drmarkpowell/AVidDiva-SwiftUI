@@ -7,13 +7,25 @@
 //
 
 import Foundation
+import CloudKit
 
 //https://api.tvmaze.com/shows/38963
 public struct TVMazeShowResult: Codable {
     var show: TVMazeShow
 }
 
-public struct TVMazeShow: Codable, Identifiable {
+public struct TVMazeShow: Codable, Identifiable, Comparable {
+    public static func < (lhs: TVMazeShow, rhs: TVMazeShow) -> Bool {
+        if let lhsName = lhs.name, let rhsName = rhs.name {
+            return lhsName < rhsName
+        }
+        return lhs.id < rhs.id
+    }
+    
+    public static func == (lhs: TVMazeShow, rhs: TVMazeShow) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
     public var id: Int
     var name: String?
     var premiered: String?
@@ -31,7 +43,24 @@ public struct TVMazeEpisodes: Codable {
     var episodes: [TVMazeEpisode]
 }
 
-public struct TVMazeEpisode: Codable, Identifiable {
+public struct TVMazeEpisode: Codable, Identifiable, Comparable {
+    
+    public static func < (lhs: TVMazeEpisode, rhs: TVMazeEpisode) -> Bool {
+        if let lhsAirdate = lhs.airdate, let rhsAirdate = rhs.airdate {
+            if lhsAirdate < rhsAirdate {
+                return true
+            } else if lhsAirdate == rhsAirdate {
+                if let lhsAirtime = lhs.airtime, let rhsAirtime = rhs.airtime {
+                    return lhsAirtime < rhsAirtime
+                }
+            }
+        }
+        return lhs.id < rhs.id
+    }
+    
+    public static func == (lhs: TVMazeEpisode, rhs: TVMazeEpisode) -> Bool {
+        return lhs.id == rhs.id
+    }
     
     public var id: Int
     var showId: Int?
@@ -77,4 +106,5 @@ public struct TVMazeEpisode: Codable, Identifiable {
         }
         return "No summary available."
     }
+
 }

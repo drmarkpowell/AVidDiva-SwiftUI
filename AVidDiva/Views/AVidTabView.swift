@@ -16,15 +16,14 @@ struct AVidTabView: View {
             ShowsSearchView()
                 .tabItem {
                     Image("first")
-                    Text("First")
+                    Text("Shows")
                 }
                 .tag(0)
-            Text("Second View")
-                .font(.title)
+            WatchListView()
                 .tabItem {
                     VStack {
                         Image("second")
-                        Text("Second")
+                        Text("Watch List")
                     }
                 }
                 .tag(1)

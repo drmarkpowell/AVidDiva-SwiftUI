@@ -10,13 +10,16 @@ import SwiftUI
 
 struct ShowEpisodesView: View {
     @ObservedObject var episodesViewModel: EpisodesViewModel
+    var showId: Int
     
-    init(_ episodesViewModel: EpisodesViewModel) {
-        self.episodesViewModel = episodesViewModel
+    init(showId: Int) {
+        self.showId = showId
+        episodesViewModel = EpisodesViewModel(showId: showId)
     }
-    
+        
     var body: some View {
-        List(episodesViewModel.episodes) { episode in
+        let withIndex = episodesViewModel.episodes.enumerated().map({ $0 })
+        return List(withIndex, id: \.element.id) { index, episode in
             HStack(alignment: .center, spacing: 20) {
                 ShowImage(urlPath: episode.image?.medium ?? "")
                     .frame(alignment: .center)
@@ -29,9 +32,13 @@ struct ShowEpisodesView: View {
                                 .font(.subheadline)
                         }
                         Spacer()
-                        Image((episode.watched == true) ? "checked" : "unchecked")
-                            .resizable()
-                            .frame(width: 40, height: 40, alignment: .center)
+                        Button(action: {
+                                self.episodesViewModel.toggle(episodeIndex: index)
+                            }) {
+                                Image((episode.watched == true) ? "checked" : "unchecked")
+                                .resizable()
+                                .frame(width: 40, height: 40, alignment: .center)
+                            }
                     }
                     ScrollView() {
                         Text(episode.getSummary())
@@ -47,7 +54,7 @@ struct ShowEpisodesView: View {
 struct ShowEpisodesView_Previews: PreviewProvider {
     static var previews: some View {
       
-        let view = ShowEpisodesView(EpisodesViewModel(showId: -1))
+        let view = ShowEpisodesView(showId: -1)
         view.episodesViewModel.episodes.append(episode1)
         view.episodesViewModel.episodes.append(episode2)
         return view

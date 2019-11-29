@@ -11,7 +11,6 @@ import Combine
 
 class EpisodesViewModel: ObservableObject {
     @Published var episodes = [TVMazeEpisode]()
-    var subscribedEpisodes = [TVMazeEpisode]()
     var showId: Int
     
     init(showId: Int) {
@@ -20,8 +19,20 @@ class EpisodesViewModel: ObservableObject {
     }
     
     func querySubscribedEpisodes() {
-        NetworkAPI.shared.getEpisodes(showId, episodeConsumer: { episodes in
-            self.episodes = episodes
+        CloudKitAPI.shared.querySubscribedEpisodes(showId: showId, episodeConsumer: { episodes in
+            DispatchQueue.main.async {
+                print("Got back episodes: \(episodes.count)")
+                self.episodes = episodes
+            }
+        })
+    }
+
+    func toggle(episodeIndex: Int) {
+        episodes[episodeIndex].watched?.toggle()
+        CloudKitAPI.shared.toggleEpisodeWatched(episode: episodes[episodeIndex], callback: { error in
+            if error != nil {
+                self.episodes[episodeIndex].watched?.toggle()
+            }
         })
     }
 }

@@ -15,28 +15,17 @@ struct ShowsSearchView: View {
     var body: some View {
         NavigationView {
             VStack {
-                if searchingForShows == false {
+                if searchingForShows {
                     HStack() {
-                        Text("My Shows")
-                        Spacer()
-                        Button(action: {
-                            self.showsViewModel.clearShows()
-                            self.searchingForShows = true
-                        }, label: { Text("Add") })
-                    }.padding()
-                } else {
-                    HStack() {
-                        Button(action: {
+                        Button("Back", action: {
                             self.showsViewModel.showSubscribedShows()
                             self.searchingForShows = false
-                        }) { Text("Back") }
+                        })
                         TextField("TV Show Title", text: $titleText).textFieldStyle(RoundedBorderTextFieldStyle())
                             .padding(.trailing)
-                        Button(action: {
+                        Button("Search", action: {
                             self.showsViewModel.queryShows(self.titleText)
-                        }) {
-                            Text("Search")
-                        }
+                        })
                     }.padding()
                 }
                 
@@ -44,19 +33,24 @@ struct ShowsSearchView: View {
                     if self.searchingForShows {
                         ShowRow(showsViewModel: self.showsViewModel, show: show, searchingForShows: true)
                     } else {
-                        NavigationLink(destination: ShowEpisodesView(EpisodesViewModel(showId: show.id))) {
+                        NavigationLink(destination: ShowEpisodesView(showId: show.id)) {
                             ShowRow(showsViewModel: self.showsViewModel, show: show, searchingForShows: false)
                         }
                     }
                 }
             }
+            .navigationBarTitle(Text("My Shows"), displayMode: .inline)
+            .navigationBarItems(trailing:
+                Button("Add", action: {
+                        self.showsViewModel.clearShows()
+                        self.searchingForShows = true
+                       }))
         }
     }
 }
 
 struct ShowsSearchView_Previews: PreviewProvider {
     static var previews: some View {
-      
         let view = ShowsSearchView()
         view.showsViewModel.showSearchResults.append(previewShow1)
         view.showsViewModel.showSearchResults.append(previewShow2)
