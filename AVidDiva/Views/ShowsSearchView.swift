@@ -60,5 +60,5 @@ struct ShowsSearchView_Previews: PreviewProvider {
     }
 }
 
-let previewShow1 = TVMazeShow(id: 210, name: "Doctor Who", premiered: "2005-03-26", officialSite: "http://www.bbc.co.uk/programmes/b006q2x0", image: TVMazeImage(medium: "http://static.tvmaze.com/uploads/images/medium_portrait/161/404447.jpg"), summary: "<p>Adventures across time and space with the time travelling alien and companions.</p>")
-let previewShow2 = TVMazeShow(id: 1577473, name: "The Mandalorian", premiered: "2019-11-12", officialSite: nil, image: nil, summary: "<p>A Mandalorian bounty hunter tracks a target for a well-paying client.</p>")
+let previewShow1 = TVMazeShow(id: 210, name: "Doctor Who", premiered: "2005-03-26", officialSite: "http://www.bbc.co.uk/programmes/b006q2x0", image: TVMazeImage(medium: "http://static.tvmaze.com/uploads/images/medium_portrait/161/404447.jpg"), summary: "<p>Adventures across time and space with the time travelling alien and companions.</p>", updated: 0)
+let previewShow2 = TVMazeShow(id: 1577473, name: "The Mandalorian", premiered: "2019-11-12", officialSite: nil, image: nil, summary: "<p>A Mandalorian bounty hunter tracks a target for a well-paying client.</p>", updated: 0)

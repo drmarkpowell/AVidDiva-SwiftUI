@@ -9,10 +9,35 @@
 import SwiftUI
 
 struct EpisodeRow: View {
-    var showsViewModel: EpisodesViewModel
-    var episode: TVMazeEpisode
+    @ObservedObject var episodeViewModel: EpisodeViewModel
     
     var body: some View {
-        Text(episode.name ?? "No name")
+       HStack(alignment: .center, spacing: 20) {
+        ShowImage(urlPath: self.episodeViewModel.episode.image?.medium ?? "")
+                .frame(alignment: .center)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(self.episodeViewModel.episode.name ?? "No name")
+                            .font(.headline)
+                        Text(self.episodeViewModel.episode.subtitle())
+                            .font(.subheadline)
+                    }
+                    Spacer()
+                    Button(action: {
+                        self.episodeViewModel.toggle()
+                        }) {
+                            Image((self.episodeViewModel.episode.watched == true) ? "checked" : "unchecked")
+                            .resizable()
+                            .frame(width: 40, height: 40, alignment: .center)
+                        }
+                }
+                ScrollView() {
+                    Text(self.episodeViewModel.episode.getSummary())
+                        .font(.caption)
+                }
+                .frame(height: 60, alignment: .leading)
+            }
+        }
     }
 }

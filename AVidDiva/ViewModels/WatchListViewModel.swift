@@ -8,54 +8,51 @@
 
 import Combine
 import Foundation
-import SwiftDate
 
 class WatchListViewModel: ObservableObject {
     
-    @Published var showNames = [String]()
     @Published var episodes = [String:[TVMazeEpisode]]()
-    var shows = [Int:TVMazeShow]()
+    @Published var showNames = [String]()
+    var shows = [String:TVMazeShow]()
+    var dateFormatter = DateFormatter()
     
     init() {
-        CloudKitAPI.shared.querySubscribedShows(showConsumer: { shows in
-            shows.forEach { show in
-                self.shows[show.id] = show
-            }
-            CloudKitAPI.shared.queryUnwatchedEpisodes(episodeConsumer: { episodes in
-                episodes.forEach { episode in
-                    guard let showId = episode.showId else {
-                        return
-                    }
-                    if let show = self.shows[showId] {
-                        if let showName = show.name {
-                            if !self.showNames.contains(showName) {
-                                self.showNames.append(showName)
-                            }
-                            
-                            var showEpisodes = self.episodes[showName] ?? [TVMazeEpisode]()
-                            showEpisodes.append(episode)
-                            self.episodes[showName] = showEpisodes
-                        }
-                    }
-                }
-            })
-        })
+        dateFormatter.dateFormat = "yyyy-MM-dd"
     }
     
-    func timeName(for airDate: Date) -> String {
-        let localToday = DateInRegion(Date(), region: Region.local).dateAt(.startOfDay)
-        let aired = DateInRegion(airDate, region: .UTC)
-        if aired.isBeforeDate(localToday, granularity: .day) {
-            return "Previously"
-        }
-        let daysUntil = localToday.getInterval(toDate: aired, component: .day)
-        switch daysUntil {
-        case 0:
-            return "Today"
-        case 1,2,3,4,5:
-            return aired.weekdayName(.default)
-        default:
-            return "Coming Soon"
-        }
+    func queryUnwatchedEpisodes() {
+        CloudKitAPI.shared.queryUnwatchedEpisodes(episodeConsumer: { episodes in
+            let nowTime = self.dateFormatter.string(from: Date())
+            var newShowNames = [String]()
+            var newEpisodes = [String:[TVMazeEpisode]]()
+            
+            for episode in episodes {
+                if let airdate = episode.airdate {
+                    if airdate > nowTime {
+                        continue
+                    }
+                }
+                
+                if let showName = episode.showName {
+                    if !newShowNames.contains(showName) {
+                        newShowNames.append(showName)
+                    }
+                    var showEpisodes = newEpisodes[showName] ?? [TVMazeEpisode]()
+                    if let index = showEpisodes.firstIndex(of: episode) {
+                        showEpisodes[index] = episode
+                    } else {
+                        showEpisodes.append(episode)
+                    }
+                    newEpisodes[showName] = showEpisodes
+                }
+            }
+            
+            DispatchQueue.main.async {
+                self.showNames = newShowNames
+            }
+            DispatchQueue.main.async {
+                self.episodes = newEpisodes
+            }
+        })
     }
 }

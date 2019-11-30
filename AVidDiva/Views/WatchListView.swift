@@ -16,10 +16,12 @@ struct WatchListView: View {
             ForEach(watchListViewModel.showNames, id: \.self) { section in
                 Section(header: Text(section)) {
                     return ForEach(self.watchListViewModel.episodes[section]!, id: \.self) { episode in
-                        Text(episode.name ?? "No name")
+                        EpisodeRow(episodeViewModel: EpisodeViewModel(episode: episode))
                     }
                 }
             }
+        }.onAppear() {
+            self.watchListViewModel.queryUnwatchedEpisodes()
         }
     }
 }

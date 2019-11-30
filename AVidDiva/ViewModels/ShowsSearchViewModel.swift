@@ -21,13 +21,13 @@ class ShowsSearchViewModel: ObservableObject {
         CloudKitAPI.shared.addOrUpdateSubscription(show: show, showConsumer: { error in
             self.subscribedShows.append(show)
             print("show added")
-            self.queryEpisodes(showId: show.id)
+            self.queryEpisodes(show: show)
         })
     }
     
-    func addToSubscribedEpisodes(episodes: [TVMazeEpisode], showId: Int) {
+    func addToSubscribedEpisodes(episodes: [TVMazeEpisode], show: TVMazeShow) {
         for episode in episodes {
-            CloudKitAPI.shared.addOrUpdateEpisode(episode: episode, showId: showId,
+            CloudKitAPI.shared.addOrUpdateEpisode(episode: episode, show: show,
                                                   episodeConsumer: { error in
                 print("added subscribed episode")
             })
@@ -35,7 +35,6 @@ class ShowsSearchViewModel: ObservableObject {
     }
     
     func querySubscribedShows() {
-        self.clearShows()
         CloudKitAPI.shared.querySubscribedShows(showConsumer: { shows in
             DispatchQueue.main.async {
                 self.showSearchResults = shows
@@ -45,10 +44,10 @@ class ShowsSearchViewModel: ObservableObject {
         })
     }
         
-    func queryEpisodes(showId: Int) {
-        NetworkAPI.shared.getEpisodes(showId, episodeConsumer: { episodes in
+    func queryEpisodes(show: TVMazeShow) {
+        NetworkAPI.shared.getEpisodes(show, episodeConsumer: { episodes in
             print("episodes queried")
-            self.addToSubscribedEpisodes(episodes: episodes, showId: showId)
+            self.addToSubscribedEpisodes(episodes: episodes, show: show)
         })
     }
     

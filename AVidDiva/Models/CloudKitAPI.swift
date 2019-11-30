@@ -25,12 +25,16 @@ class CloudKitAPI {
         privateDB = container.privateCloudDatabase
     }
 
+    func checkForNewEpisodes(completed:()->()) {
+        
+        completed()
+    }
+    
     func toggleEpisodeWatched(episode: TVMazeEpisode, callback: @escaping (Error?)->()) {
-        if let showId = episode.showId {
-            addOrUpdateEpisode(episode: episode, showId: showId,
-                               episodeConsumer: { error in
-                callback(error)
-            })
+        if let episodeRecord = episodeRecords[episode.id] {
+            episodeRecord.setValue(episode.watched ?? false, forKey: "watched")
+            episodeRecords[episode.id] = episodeRecord
+            addOrUpdate(record: episodeRecord, update: true, callback: callback)
         }
     }
     
@@ -42,7 +46,7 @@ class CloudKitAPI {
                 var shows = [TVMazeShow]()
                 for record in records {
                     if let mazeId = record.value(forKey: "mazeId") as? Int {
-                        var show = TVMazeShow(id: mazeId, name: nil, premiered: nil, officialSite: nil, image: nil, summary: nil)
+                        var show = TVMazeShow(id: mazeId, updated: 0)
                         show.name = record.value(forKey: "name") as? String
                         show.premiered = record.value(forKey: "premiered") as? String
                         show.officialSite = record.value(forKey: "officialSite") as? String
@@ -70,8 +74,22 @@ class CloudKitAPI {
     }
     
     func queryUnwatchedEpisodes(episodeConsumer: @escaping ([TVMazeEpisode])->()) {
-        let predicate = NSPredicate(format: "watched == %@", NSNumber(booleanLiteral: false))
-        querySubscribedEpisodes(predicate: predicate, episodeConsumer: episodeConsumer)
+        if episodeRecords.isEmpty {
+            let predicate = NSPredicate(format: "watched == %@", NSNumber(booleanLiteral: false))
+            querySubscribedEpisodes(predicate: predicate, episodeConsumer: episodeConsumer)
+        } else {
+            var episodes = [TVMazeEpisode]()
+            for (_, record) in episodeRecords {
+                if let mazeId = record.value(forKey: "mazeId") as? Int {
+                    let watched = (record.value(forKey: "watched") as? NSNumber)?.boolValue
+                    if watched == false {
+                        episodes.append(makeEpisode(mazeId, record))
+                    }
+                }
+            }
+            episodes.sort()
+            episodeConsumer(episodes)
+        }
     }
     
     func querySubscribedEpisodes(predicate: NSPredicate, episodeConsumer: @escaping ([TVMazeEpisode])->()) {
@@ -81,23 +99,7 @@ class CloudKitAPI {
                 var episodes = [TVMazeEpisode]()
                 for record in records {
                     if let mazeId = record.value(forKey: "mazeId") as? Int {
-                        var episode = TVMazeEpisode(id: mazeId, showId: 0, name: nil, season: nil, number: nil, airdate: nil, airtime: nil, image: nil, summary: nil, watched: nil)
-                        episode.name = record.value(forKey: "name") as? String
-                        if let showId = record.value(forKey: "mazeShowId") as? Int {
-                            episode.showId = showId
-                        } else {
-                            continue
-                        }
-                        episode.season = record.value(forKey: "season") as? Int
-                        episode.number = record.value(forKey: "number") as? Int
-                        episode.airdate = record.value(forKey: "airdate") as? String
-                        episode.airtime = record.value(forKey: "airtime") as? String
-                        if let imageLocator = record.value(forKey: "mediumImageLocator") as? String {
-                            episode.image = TVMazeImage(medium: imageLocator)
-                        }
-                        episode.summary = record.value(forKey: "summary") as? String
-                        episode.watched = (record.value(forKey: "watched") as? NSNumber)?.boolValue
-                        
+                        let episode = self.makeEpisode(mazeId, record)
                         episodes.append(episode)
                         self.episodeRecords[episode.id] = record
                     }
@@ -108,6 +110,25 @@ class CloudKitAPI {
         }
     }
         
+    func makeEpisode(_ mazeId: Int, _ record: CKRecord) -> TVMazeEpisode {
+        var episode = TVMazeEpisode(id: mazeId, showId: 0)
+        episode.name = record.value(forKey: "name") as? String
+        if let showId = record.value(forKey: "mazeShowId") as? Int {
+            episode.showId = showId
+        }
+        episode.showName = record.value(forKey: "showName") as? String
+        episode.season = record.value(forKey: "season") as? Int
+        episode.number = record.value(forKey: "number") as? Int
+        episode.airdate = record.value(forKey: "airdate") as? String
+        episode.airtime = record.value(forKey: "airtime") as? String
+        if let imageLocator = record.value(forKey: "mediumImageLocator") as? String {
+            episode.image = TVMazeImage(medium: imageLocator)
+        }
+        episode.summary = record.value(forKey: "summary") as? String
+        episode.watched = (record.value(forKey: "watched") as? NSNumber)?.boolValue
+        return episode
+    }
+    
     func addOrUpdateSubscription(show: TVMazeShow, showConsumer: @escaping (Error?)->()) {
         var record:CKRecord
         var update = false
@@ -136,10 +157,12 @@ class CloudKitAPI {
         if let summary = show.summary {
             record.setValue(summary, forKey: "summary")
         }
+        self.showRecords[show.id] = record
         addOrUpdate(record: record, update: update, callback: showConsumer)
     }
     
-    func addOrUpdateEpisode(episode: TVMazeEpisode, showId: Int, episodeConsumer: @escaping (Error?)->()) {
+    func addOrUpdateEpisode(episode: TVMazeEpisode, show: TVMazeShow,
+                            episodeConsumer: @escaping (Error?)->()) {
         var record:CKRecord
         var update = false
         if let rec = episodeRecords[episode.id] {
@@ -151,7 +174,10 @@ class CloudKitAPI {
                               recordID: CKRecord.ID(recordName: "SubscribedEpisode\(episode.id)"))
         }
         record.setValue(episode.id, forKey: "mazeId")
-        record.setValue(showId, forKey: "mazeShowId")
+        record.setValue(show.id, forKey: "mazeShowId")
+        if let showName = show.name {
+            record.setValue(showName, forKey: "showName")
+        }
         if let name = episode.name {
             record.setValue(name, forKey: "name")
         }
@@ -176,6 +202,7 @@ class CloudKitAPI {
         let watched = episode.watched ?? false
         record.setValue(watched, forKey: "watched")
         
+        self.episodeRecords[episode.id] = record
         addOrUpdate(record: record, update: update, callback: episodeConsumer)
     }
 

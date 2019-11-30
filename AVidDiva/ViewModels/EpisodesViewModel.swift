@@ -25,13 +25,4 @@ class EpisodesViewModel: ObservableObject {
             }
         })
     }
-
-    func toggle(episodeIndex: Int) {
-        episodes[episodeIndex].watched?.toggle()
-        CloudKitAPI.shared.toggleEpisodeWatched(episode: episodes[episodeIndex], callback: { error in
-            if error != nil {
-                self.episodes[episodeIndex].watched?.toggle()
-            }
-        })
-    }
 }

@@ -46,8 +46,8 @@ public class NetworkAPI {
             })
     }
     
-    func getEpisodes(_ showId: Int, episodeConsumer: @escaping ([TVMazeEpisode])->()) {
-        guard let url = URL(string: "https://api.tvmaze.com/shows/\(showId)/episodes?specials=1") else {
+    func getEpisodes(_ show: TVMazeShow, episodeConsumer: @escaping ([TVMazeEpisode])->()) {
+        guard let url = URL(string: "https://api.tvmaze.com/shows/\(show.id)/episodes?specials=1") else {
             return
         }
         self.getEpisodesCancellable = URLSession.shared.dataTaskPublisher(for: url)

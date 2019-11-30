@@ -18,35 +18,8 @@ struct ShowEpisodesView: View {
     }
         
     var body: some View {
-        let withIndex = episodesViewModel.episodes.enumerated().map({ $0 })
-        return List(withIndex, id: \.element.id) { index, episode in
-            HStack(alignment: .center, spacing: 20) {
-                ShowImage(urlPath: episode.image?.medium ?? "")
-                    .frame(alignment: .center)
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(episode.name ?? "No name")
-                                .font(.headline)
-                            Text(episode.subtitle())
-                                .font(.subheadline)
-                        }
-                        Spacer()
-                        Button(action: {
-                                self.episodesViewModel.toggle(episodeIndex: index)
-                            }) {
-                                Image((episode.watched == true) ? "checked" : "unchecked")
-                                .resizable()
-                                .frame(width: 40, height: 40, alignment: .center)
-                            }
-                    }
-                    ScrollView() {
-                        Text(episode.getSummary())
-                            .font(.caption)
-                    }
-                    .frame(height: 60, alignment: .leading)
-                }
-            }
+        List(episodesViewModel.episodes) { episode in
+            EpisodeRow(episodeViewModel: EpisodeViewModel(episode: episode))
         }.onAppear() {
             self.episodesViewModel.querySubscribedEpisodes()
         }

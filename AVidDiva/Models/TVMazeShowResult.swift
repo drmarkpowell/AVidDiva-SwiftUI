@@ -32,6 +32,7 @@ public struct TVMazeShow: Codable, Identifiable, Comparable {
     var officialSite: String?
     var image: TVMazeImage?
     var summary: String?
+    var updated: Int
 }
 
 public struct TVMazeImage: Codable {
@@ -47,6 +48,7 @@ public struct TVMazeEpisode: Codable, Identifiable, Comparable, Hashable {
     
     public var id: Int
     var showId: Int?
+    var showName: String?
     var name: String?
     var season: Int?
     var number: Int?
@@ -107,7 +109,7 @@ public struct TVMazeEpisode: Codable, Identifiable, Comparable, Hashable {
         return lhs.id == rhs.id
     }
     
-    public var hashValue: Int {
-        return id
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }

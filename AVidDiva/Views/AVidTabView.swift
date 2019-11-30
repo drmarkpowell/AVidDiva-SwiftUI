@@ -27,6 +27,14 @@ struct AVidTabView: View {
                     }
                 }
                 .tag(1)
+            CalendarView()
+                .tabItem {
+                    VStack {
+                        Image("third")
+                        Text("Calendar")
+                    }
+                }
+                .tag(2)
         }
     }
 }

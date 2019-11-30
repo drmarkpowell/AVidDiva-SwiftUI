@@ -20,6 +20,9 @@
 		4ADBEAEF2390718300FF68BF /* WatchListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADBEAEE2390718300FF68BF /* WatchListView.swift */; };
 		4ADBEAF123917E5B00FF68BF /* WatchListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADBEAF023917E5B00FF68BF /* WatchListViewModel.swift */; };
 		4ADBEAF323919D8B00FF68BF /* EpisodeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADBEAF223919D8B00FF68BF /* EpisodeRow.swift */; };
+		4ADBEAF52391ADEB00FF68BF /* EpisodeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADBEAF42391ADEB00FF68BF /* EpisodeViewModel.swift */; };
+		4ADBEAF72391BFC900FF68BF /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADBEAF62391BFC900FF68BF /* CalendarView.swift */; };
+		4ADBEAF92391C02300FF68BF /* CalendarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADBEAF82391C02300FF68BF /* CalendarViewModel.swift */; };
 		4ADF5AA22366454D009A6D79 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADF5AA12366454D009A6D79 /* AppDelegate.swift */; };
 		4ADF5AA42366454D009A6D79 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADF5AA32366454D009A6D79 /* SceneDelegate.swift */; };
 		4ADF5AA62366454D009A6D79 /* AVidTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADF5AA52366454D009A6D79 /* AVidTabView.swift */; };
@@ -58,6 +61,9 @@
 		4ADBEAEE2390718300FF68BF /* WatchListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchListView.swift; sourceTree = "<group>"; };
 		4ADBEAF023917E5B00FF68BF /* WatchListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchListViewModel.swift; sourceTree = "<group>"; };
 		4ADBEAF223919D8B00FF68BF /* EpisodeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpisodeRow.swift; sourceTree = "<group>"; };
+		4ADBEAF42391ADEB00FF68BF /* EpisodeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpisodeViewModel.swift; sourceTree = "<group>"; };
+		4ADBEAF62391BFC900FF68BF /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
+		4ADBEAF82391C02300FF68BF /* CalendarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarViewModel.swift; sourceTree = "<group>"; };
 		4ADF5A9E2366454D009A6D79 /* AVidDiva.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AVidDiva.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4ADF5AA12366454D009A6D79 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4ADF5AA32366454D009A6D79 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -105,6 +111,7 @@
 				4A5CDE5B2378B16200F16C13 /* ShowsSearchView.swift */,
 				4A180FEE238B467E00BFEF35 /* ShowEpisodesView.swift */,
 				4ADBEAEE2390718300FF68BF /* WatchListView.swift */,
+				4ADBEAF62391BFC900FF68BF /* CalendarView.swift */,
 				4A5CDE562378AF1900F16C13 /* ShowImage.swift */,
 				4ACEDE63238B68610006EF12 /* ShowRow.swift */,
 				4ADBEAF223919D8B00FF68BF /* EpisodeRow.swift */,
@@ -127,8 +134,10 @@
 			children = (
 				4A92208923669EF7002B9769 /* ShowsSearchViewModel.swift */,
 				4A180FF0238B475800BFEF35 /* EpisodesViewModel.swift */,
+				4ADBEAF42391ADEB00FF68BF /* EpisodeViewModel.swift */,
 				4A5CDE5D2378B1E800F16C13 /* TVImageModel.swift */,
 				4ADBEAF023917E5B00FF68BF /* WatchListViewModel.swift */,
+				4ADBEAF82391C02300FF68BF /* CalendarViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -313,6 +322,7 @@
 				4ADBEAEF2390718300FF68BF /* WatchListView.swift in Sources */,
 				4ADBEAF123917E5B00FF68BF /* WatchListViewModel.swift in Sources */,
 				4A180FF1238B475800BFEF35 /* EpisodesViewModel.swift in Sources */,
+				4ADBEAF52391ADEB00FF68BF /* EpisodeViewModel.swift in Sources */,
 				4A5CDE5E2378B1E800F16C13 /* TVImageModel.swift in Sources */,
 				4A180FEF238B467E00BFEF35 /* ShowEpisodesView.swift in Sources */,
 				4ACEDE64238B68610006EF12 /* ShowRow.swift in Sources */,
@@ -320,7 +330,9 @@
 				4ADF5AA42366454D009A6D79 /* SceneDelegate.swift in Sources */,
 				4AFDEFE72389DA5900916B04 /* CloudKitAPI.swift in Sources */,
 				4ADF5AA62366454D009A6D79 /* AVidTabView.swift in Sources */,
+				4ADBEAF92391C02300FF68BF /* CalendarViewModel.swift in Sources */,
 				4ADBEAF323919D8B00FF68BF /* EpisodeRow.swift in Sources */,
+				4ADBEAF72391BFC900FF68BF /* CalendarView.swift in Sources */,
 				4A5CDE572378AF1900F16C13 /* ShowImage.swift in Sources */,
 				4ADF5ACA236655C4009A6D79 /* TVMazeShowResult.swift in Sources */,
 				4A92208A23669EF7002B9769 /* ShowsSearchViewModel.swift in Sources */,
