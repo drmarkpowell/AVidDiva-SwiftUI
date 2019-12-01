@@ -10,6 +10,7 @@ import SwiftUI
 
 struct EpisodeRow: View {
     @ObservedObject var episodeViewModel: EpisodeViewModel
+    @State var textHeight: CGFloat? = 60
     
     var body: some View {
        HStack(alignment: .center, spacing: 20) {
@@ -36,7 +37,10 @@ struct EpisodeRow: View {
                 }
                 Text(self.episodeViewModel.episode.getSummary())
                     .font(.caption)
-                .frame(height: 60, alignment: .leading)
+                    .frame(height: self.textHeight, alignment: .leading)
+                    .onTapGesture {
+                        self.textHeight = self.textHeight == nil ? 60 : nil
+                    }
             }
         }
     }
