@@ -38,6 +38,7 @@ struct EpisodeRow: View {
                 Text(self.episodeViewModel.episode.getSummary())
                     .font(.caption)
                     .frame(height: self.textHeight, alignment: .leading)
+//                    .animation(.easeInOut(duration: 0.5)) //TODO this doesn't work well because the List container snaps to its new size instantly even though the text frame height is animating smoothly.
                     .onTapGesture {
                         self.textHeight = self.textHeight == nil ? 60 : nil
                     }
