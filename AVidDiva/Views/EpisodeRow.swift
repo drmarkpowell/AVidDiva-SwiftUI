@@ -24,18 +24,18 @@ struct EpisodeRow: View {
                             .font(.subheadline)
                     }
                     Spacer()
-                    Button(action: {
-                        self.episodeViewModel.toggle()
-                        }) {
-                            Image((self.episodeViewModel.episode.watched == true) ? "checked" : "unchecked")
-                            .resizable()
-                            .frame(width: 40, height: 40, alignment: .center)
-                        }
+                    Button(action:{
+                            self.episodeViewModel.toggle()
+                            })
+                    {
+                        Image((self.episodeViewModel.episode.watched == true) ? "checked" : "unchecked")
+                        .resizable()
+                        .frame(width: 40, height: 40, alignment: .center)
+                    }
+                    .buttonStyle(BorderlessButtonStyle())
                 }
-                ScrollView() {
-                    Text(self.episodeViewModel.episode.getSummary())
-                        .font(.caption)
-                }
+                Text(self.episodeViewModel.episode.getSummary())
+                    .font(.caption)
                 .frame(height: 60, alignment: .leading)
             }
         }
