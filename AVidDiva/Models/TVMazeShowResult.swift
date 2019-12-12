@@ -57,7 +57,12 @@ public struct TVMazeEpisode: Codable, Identifiable, Comparable, Hashable {
     var image: TVMazeImage?
     var summary: String?
     var watched: Bool?
+    var showRecord: CKRecord?
     
+    private enum CodingKeys: String, CodingKey {
+        case id, name, season, number, airdate, airtime, image, summary
+    }
+
     func subtitle() -> String {
         let seasonNum = String("\(season ?? 0)")
         let episodeNum = String("\(number ?? 0)")

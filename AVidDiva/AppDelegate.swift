@@ -13,7 +13,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        application.setMinimumBackgroundFetchInterval(3600*4)
+        application.setMinimumBackgroundFetchInterval(60)
         return true
     }
 
@@ -32,9 +32,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication, performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-            CloudKitAPI.shared.checkForNewEpisodes(completed: {
-               completionHandler(.newData)
-           })
+            CloudKitAPI.shared.checkForNewEpisodes(completionHandler: completionHandler)
        }
 }
 

@@ -6,8 +6,10 @@
 //  Copyright © 2019 Powellware. All rights reserved.
 //
 
-import Foundation
 import CloudKit
+import Combine
+import Foundation
+import UIKit
 
 class CloudKitAPI {
 
@@ -18,6 +20,7 @@ class CloudKitAPI {
     static let shared = CloudKitAPI()
     var showRecords = [Int:CKRecord]()
     var episodeRecords = [Int:CKRecord]()
+    var getShowCancellables = [AnyCancellable]()
 
     private init() {
         container = CKContainer.default()
@@ -25,9 +28,44 @@ class CloudKitAPI {
         privateDB = container.privateCloudDatabase
     }
 
-    func checkForNewEpisodes(completed:()->()) {
-        
-        completed()
+    func checkForNewEpisodes(completionHandler: (UIBackgroundFetchResult) -> Void) {
+        getShowCancellables.removeAll()
+        if !episodeRecords.isEmpty {
+            for (showIndex, showRecord) in showRecords {
+                let showName = showRecord.value(forKey: "name") ?? "No Show"
+                print("Updating \(showName)")
+                if let subUpdated = showRecord.value(forKey: "updated") as? Int {
+                    if let cancellable = NetworkAPI.shared.getShow(showIndex, showConsumer: { show in
+                        if let show = show {
+                            if subUpdated < show.updated {
+                                CloudKitAPI.shared.addOrUpdateSubscription(show: show, showConsumer: { error in
+                                    if let error = error {
+                                        print("Error updating show: \(error.localizedDescription)")
+                                    }
+                                })
+                                NetworkAPI.shared.getEpisodes(show, episodeConsumer: { episodes in
+                                    for episode in episodes {
+                                        print("Updating \(showName) episode: \(episode.name ?? "Untitled")")
+                                        CloudKitAPI.shared.addOrUpdateEpisode(episode: episode, show: show, episodeConsumer: { error in
+                                            if let error = error {
+                                                print("Error updating: \(error.localizedDescription)")
+                                            }
+                                        })
+                                    }
+                                })
+                            } else {
+                                print("\(showName) is up to date.")
+                            }
+                        }
+                    }) {
+                        getShowCancellables.append(cancellable)
+                    }
+                }
+            }
+            completionHandler(.newData)
+        } else {
+            completionHandler(.noData)
+        }
     }
     
     func toggleEpisodeWatched(episode: TVMazeEpisode, callback: @escaping (Error?)->()) {
@@ -50,6 +88,9 @@ class CloudKitAPI {
                         show.name = record.value(forKey: "name") as? String
                         show.premiered = record.value(forKey: "premiered") as? String
                         show.officialSite = record.value(forKey: "officialSite") as? String
+                        if let updated = record.value(forKey: "updated") as? Int {
+                            show.updated = updated
+                        }
                         if let imageLocator = record.value(forKey: "mediumImageLocator") as? String {
                             show.image = TVMazeImage(medium: imageLocator)
                         }
@@ -116,6 +157,9 @@ class CloudKitAPI {
         if let showId = record.value(forKey: "mazeShowId") as? Int {
             episode.showId = showId
         }
+        if let showRecord = record.value(forKey: "showRecord") as? CKRecord {
+            episode.showRecord = showRecord
+        }
         episode.showName = record.value(forKey: "showName") as? String
         episode.season = record.value(forKey: "season") as? Int
         episode.number = record.value(forKey: "number") as? Int
@@ -157,6 +201,7 @@ class CloudKitAPI {
         if let summary = show.summary {
             record.setValue(summary, forKey: "summary")
         }
+        record.setValue(show.updated, forKey: "updated")
         self.showRecords[show.id] = record
         addOrUpdate(record: record, update: update, callback: showConsumer)
     }
@@ -177,6 +222,10 @@ class CloudKitAPI {
         record.setValue(show.id, forKey: "mazeShowId")
         if let showName = show.name {
             record.setValue(showName, forKey: "showName")
+        }
+        if let showRecord = showRecords[show.id] {
+            let ref = CKRecord.Reference(record: showRecord, action: .deleteSelf)
+            record.setValue(ref, forKey: "showRecord")
         }
         if let name = episode.name {
             record.setValue(name, forKey: "name")
@@ -199,8 +248,11 @@ class CloudKitAPI {
         if let summary = episode.summary {
             record.setValue(summary, forKey: "summary")
         }
-        let watched = episode.watched ?? false
-        record.setValue(watched, forKey: "watched")
+        if let watched = record.value(forKey: "watched") as? Bool {
+            record.setValue(watched, forKey: "watched") //updating a record preserves its watched value
+        } else {
+            record.setValue(false, forKey: "watched") //a new record always gets an unwatched status
+        }
         
         self.episodeRecords[episode.id] = record
         addOrUpdate(record: record, update: update, callback: episodeConsumer)

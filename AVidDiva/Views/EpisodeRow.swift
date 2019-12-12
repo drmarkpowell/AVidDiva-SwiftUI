@@ -12,6 +12,10 @@ struct EpisodeRow: View {
     @ObservedObject var episodeViewModel: EpisodeViewModel
     @State var textHeight: CGFloat? = 60
     
+    func action(_ long: Bool) {
+        self.episodeViewModel.toggleWatched(long)
+    }
+    
     var body: some View {
        HStack(alignment: .center, spacing: 20) {
         ShowImage(urlPath: self.episodeViewModel.episode.image?.medium ?? "")
@@ -26,11 +30,16 @@ struct EpisodeRow: View {
                     }
                     Spacer()
                     Button(action:{
-                            self.episodeViewModel.toggle()
                             })
                     {
                         Image((self.episodeViewModel.episode.watched == true) ? "checked" : "unchecked")
                         .resizable()
+                        .onTapGesture {
+                            self.action(false)
+                        }
+                        .onLongPressGesture(minimumDuration: 0.1) {
+                            self.action(true)
+                        }
                         .frame(width: 40, height: 40, alignment: .center)
                     }
                     .buttonStyle(BorderlessButtonStyle())

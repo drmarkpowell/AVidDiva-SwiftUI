@@ -43,6 +43,13 @@ class CalendarViewModel: ObservableObject {
             }
             self.timePairs.sort(by: {$0.1 < $1.1})
             newTimes = self.timePairs.compactMap { $0.0 } //array of sorted time names
+            for time in newEpisodes.keys {
+                if let episodes = newEpisodes[time] {
+                    newEpisodes[time] = episodes.sorted(by: {
+                        "\($0.airdate ?? "9999")\($0.showName ?? "")" < "\($1.airdate ?? "9999")\($1.showName ?? "")"
+                    })
+                }
+            }
             DispatchQueue.main.async {
                 self.times = newTimes
             }

@@ -28,9 +28,14 @@ class WatchListViewModel: ObservableObject {
             
             for episode in episodes {
                 if let airdate = episode.airdate {
-                    if airdate > nowTime {
+                    if airdate.isEmpty { //skip if empty airdate
                         continue
                     }
+                    if airdate > nowTime { //skip if hasn't aired yet
+                        continue
+                    }
+                } else {  //skip if no airdate set
+                    continue
                 }
                 
                 if let showName = episode.showName {
@@ -50,7 +55,7 @@ class WatchListViewModel: ObservableObject {
             DispatchQueue.main.async {
                 self.showNames = newShowNames
             }
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { //why did this seem to work better in two separate async calls?
                 self.episodes = newEpisodes
             }
         })

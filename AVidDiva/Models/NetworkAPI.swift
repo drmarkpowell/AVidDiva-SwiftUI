@@ -16,6 +16,7 @@ public class NetworkAPI {
     private init() { }
 
     private var getShowsCancellable: AnyCancellable?
+    private var getShowCancellable: AnyCancellable?
     private var getEpisodesCancellable: AnyCancellable?
     
     /**
@@ -29,7 +30,7 @@ public class NetworkAPI {
         guard let url = URL(string: "https://api.tvmaze.com/search/shows?q=\(titleEncodedText)") else {
             return
         }
-        self.getShowsCancellable = URLSession.shared.dataTaskPublisher(for: url)
+        getShowsCancellable = URLSession.shared.dataTaskPublisher(for: url)
             .map(\.data)
             .decode(type: [TVMazeShowResult].self, decoder: JSONDecoder())
             .replaceError(with: [])
@@ -43,6 +44,20 @@ public class NetworkAPI {
                     return show
                 }
                 showConsumer(shows)
+            })
+    }
+    
+    func getShow(_ showId: Int, showConsumer: @escaping (TVMazeShow?)->()) -> AnyCancellable? {
+        guard let url = URL(string: "https://api.tvmaze.com/shows/\(showId)") else {
+            return nil
+        }
+        return URLSession.shared.dataTaskPublisher(for: url)
+            .map(\.data)
+            .decode(type: TVMazeShow?.self, decoder: JSONDecoder())
+            .replaceError(with: nil)
+            .eraseToAnyPublisher()
+            .sink(receiveValue: { show in
+                showConsumer(show)
             })
     }
     
@@ -63,10 +78,10 @@ public class NetworkAPI {
 }
 
 extension String {
-  func stringByAddingPercentEncodingForRFC3986() -> String? {
-    let unreserved = "-._~/?"
-    let allowed = NSMutableCharacterSet.alphanumeric()
-    allowed.addCharacters(in: unreserved)
-    return (self as NSString).addingPercentEncoding(withAllowedCharacters:allowed as CharacterSet)
-  }
+    func stringByAddingPercentEncodingForRFC3986() -> String? {
+        let unreserved = "-._~/?"
+        let allowed = NSMutableCharacterSet.alphanumeric()
+        allowed.addCharacters(in: unreserved)
+        return (self as NSString).addingPercentEncoding(withAllowedCharacters:allowed as CharacterSet)
+    }
 }
