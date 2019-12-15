@@ -10,6 +10,13 @@ import Combine
 import Foundation
 import SwiftDate
 
+func td(_ num: Int?) -> String {
+    if let num = num {
+        return String(format: "%02d", num)
+    }
+    return "00"
+}
+
 class CalendarViewModel: ObservableObject {
     
     @Published var episodes = [String:[TVMazeEpisode]]()
@@ -46,7 +53,8 @@ class CalendarViewModel: ObservableObject {
             for time in newEpisodes.keys {
                 if let episodes = newEpisodes[time] {
                     newEpisodes[time] = episodes.sorted(by: {
-                        "\($0.airdate ?? "9999")\($0.showName ?? "")" < "\($1.airdate ?? "9999")\($1.showName ?? "")"
+                        "\($0.airdate ?? "9999")\($0.showName ?? "")\(td($0.number))" <
+                        "\($1.airdate ?? "9999")\($1.showName ?? "")\(td($1.number))"
                     })
                 }
             }
@@ -58,7 +66,7 @@ class CalendarViewModel: ObservableObject {
             }                
         })
     }
-
+    
     func timeName(for airdateText: String) -> (String, Int) {
         let airDate = dateFormat.date(from: airdateText) ?? Date(timeIntervalSince1970: 31557600*129) //year 2099
         let localToday = DateInRegion(Date(), region: Region.local).dateAt(.startOfDay)

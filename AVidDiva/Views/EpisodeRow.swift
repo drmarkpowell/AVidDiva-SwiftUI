@@ -18,7 +18,7 @@ struct EpisodeRow: View {
     
     var body: some View {
        HStack(alignment: .center, spacing: 20) {
-        ShowImage(urlPath: self.episodeViewModel.episode.image?.medium ?? "")
+        ShowImage(urlPath: self.episodeViewModel.imageUrlPath() ?? "")
                 .frame(alignment: .center)
             VStack(alignment: .leading, spacing: 4) {
                 HStack {

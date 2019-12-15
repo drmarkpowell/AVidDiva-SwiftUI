@@ -36,6 +36,17 @@ class EpisodeViewModel: ObservableObject {
         }
     }
     
+    func imageUrlPath() -> String? {
+        if let path = episode.image?.medium {
+            return path
+        }
+        if let showId = episode.showId,
+            let showRecord = CloudKitAPI.shared.showRecords[showId] {
+            return showRecord.value(forKey: "mediumImageLocator") as? String
+        }
+        return nil
+    }
+    
     func toggleWatched(_ includePreviousEpisodes: Bool) {
         episode.watched?.toggle()
         CloudKitAPI.shared.toggleEpisodeWatched(episode: episode, callback: { error in

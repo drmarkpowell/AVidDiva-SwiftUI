@@ -51,6 +51,15 @@ class WatchListViewModel: ObservableObject {
                     newEpisodes[showName] = showEpisodes
                 }
             }
+            newShowNames.sort()
+            for name in newEpisodes.keys {
+                if let episodes = newEpisodes[name] {
+                    newEpisodes[name] = episodes.sorted(by: {
+                        "\($0.airdate ?? "9999")\($0.showName ?? "")\(td($0.number))" <
+                        "\($1.airdate ?? "9999")\($1.showName ?? "")\(td($1.number))"
+                    })
+                }
+            }
             
             DispatchQueue.main.async {
                 self.showNames = newShowNames
