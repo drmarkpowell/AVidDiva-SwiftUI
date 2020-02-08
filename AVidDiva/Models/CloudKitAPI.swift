@@ -21,6 +21,9 @@ class CloudKitAPI {
     var showRecords = [Int:CKRecord]()
     var episodeRecords = [Int:CKRecord]()
     var getShowCancellables = [AnyCancellable]()
+    var records = [CKRecord]()
+    var episodeConsumer: (([TVMazeEpisode])->())?
+    var showConsumer: (([TVMazeShow])->())?
 
     private init() {
         container = CKContainer.default()
@@ -79,30 +82,11 @@ class CloudKitAPI {
     func querySubscribedShows(showConsumer: @escaping ([TVMazeShow])->()) {
         let predicate = NSPredicate(value: true)
         let query = CKQuery(recordType: "SubscribedShow", predicate: predicate)
-        privateDB.perform(query, inZoneWith: nil) { (records, error) in
-            if let records = records {
-                var shows = [TVMazeShow]()
-                for record in records {
-                    if let mazeId = record.value(forKey: "mazeId") as? Int {
-                        var show = TVMazeShow(id: mazeId, updated: 0)
-                        show.name = record.value(forKey: "name") as? String
-                        show.premiered = record.value(forKey: "premiered") as? String
-                        show.officialSite = record.value(forKey: "officialSite") as? String
-                        if let updated = record.value(forKey: "updated") as? Int {
-                            show.updated = updated
-                        }
-                        if let imageLocator = record.value(forKey: "mediumImageLocator") as? String {
-                            show.image = TVMazeImage(medium: imageLocator)
-                        }
-                        show.summary = record.value(forKey: "summary") as? String
-                        shows.append(show)
-                        self.showRecords[show.id] = record
-                    }
-                }
-                shows.sort()
-                showConsumer(shows)
-            }
-        }
+        self.showConsumer = showConsumer
+        let queryOp = CKQueryOperation(query: query)
+        queryOp.recordFetchedBlock = recordFetched(record:)
+        queryOp.queryCompletionBlock = showFetchCompletion(cursor:error:)
+        privateDB.add(queryOp)
     }
     
     func querySubscribedEpisodes(showId: Int, episodeConsumer: @escaping ([TVMazeEpisode])->()) {
@@ -115,40 +99,96 @@ class CloudKitAPI {
     }
     
     func queryUnwatchedEpisodes(episodeConsumer: @escaping ([TVMazeEpisode])->()) {
-        if episodeRecords.isEmpty {
+//        if episodeRecords.isEmpty {
             let predicate = NSPredicate(format: "watched == %@", NSNumber(booleanLiteral: false))
             querySubscribedEpisodes(predicate: predicate, episodeConsumer: episodeConsumer)
+//        } else {
+//            var episodes = [TVMazeEpisode]()
+//            for (_, record) in episodeRecords {
+//                if let mazeId = record.value(forKey: "mazeId") as? Int {
+//                    let watched = (record.value(forKey: "watched") as? NSNumber)?.boolValue
+//                    if watched == false {
+//                        episodes.append(makeEpisode(mazeId, record))
+//                    }
+//                }
+//            }
+//            episodes.sort()
+//            episodeConsumer(episodes)
+//        }
+    }
+    
+    func recordFetched(record: CKRecord) {
+        records.append(record)
+    }
+    
+    func showFetchCompletion(cursor: CKQueryOperation.Cursor?, error: Error?) {
+        if let error = error {
+            print("Error reading from CloudKit DB: \(error)")
+        } else if let cursor = cursor { //more data to fetch
+            print("Got back max number of records")
+            let nextOperation = CKQueryOperation(cursor: cursor)
+            nextOperation.recordFetchedBlock = recordFetched(record:)
+            nextOperation.queryCompletionBlock = showFetchCompletion(cursor:error:)
+            self.privateDB.add(nextOperation)
         } else {
-            var episodes = [TVMazeEpisode]()
-            for (_, record) in episodeRecords {
+            var shows = [TVMazeShow]()
+            for record in records {
                 if let mazeId = record.value(forKey: "mazeId") as? Int {
-                    let watched = (record.value(forKey: "watched") as? NSNumber)?.boolValue
-                    if watched == false {
-                        episodes.append(makeEpisode(mazeId, record))
+                    var show = TVMazeShow(id: mazeId, updated: 0)
+                    show.name = record.value(forKey: "name") as? String
+                    show.premiered = record.value(forKey: "premiered") as? String
+                    show.officialSite = record.value(forKey: "officialSite") as? String
+                    if let updated = record.value(forKey: "updated") as? Int {
+                        show.updated = updated
                     }
+                    if let imageLocator = record.value(forKey: "mediumImageLocator") as? String {
+                        show.image = TVMazeImage(medium: imageLocator)
+                    }
+                    show.summary = record.value(forKey: "summary") as? String
+                    shows.append(show)
+                    self.showRecords[show.id] = record
                 }
             }
-            episodes.sort()
-            episodeConsumer(episodes)
+            shows.sort()
+            showConsumer?(shows)
+            showConsumer = nil
+            records.removeAll()
         }
     }
     
+    func episodeFetchCompletion(cursor: CKQueryOperation.Cursor?, error: Error?) {
+        if let error = error {
+            print("Error reading from CloudKit DB: \(error)")
+        } else if let cursor = cursor { //more data to fetch
+            print("Got back max number of records")
+            let nextOperation = CKQueryOperation(cursor: cursor)
+            nextOperation.recordFetchedBlock = recordFetched(record:)
+            nextOperation.queryCompletionBlock = episodeFetchCompletion(cursor:error:)
+            self.privateDB.add(nextOperation)
+        } else {
+            print("CloudKit return total of \(records.count) records.")
+            var episodes = [TVMazeEpisode]()
+            for record in records {
+                if let mazeId = record.value(forKey: "mazeId") as? Int {
+                    let episode = self.makeEpisode(mazeId, record)
+                    episodes.append(episode)
+                    self.episodeRecords[episode.id] = record
+                }
+            }
+            episodes.sort()
+            episodeConsumer?(episodes)
+            episodeConsumer = nil //clean up reference to consumer closure
+            records.removeAll()   //clean up record cache
+        }
+    }
+        
     func querySubscribedEpisodes(predicate: NSPredicate, episodeConsumer: @escaping ([TVMazeEpisode])->()) {
         let query = CKQuery(recordType: "SubscribedEpisode", predicate: predicate)
-        privateDB.perform(query, inZoneWith: nil) { (records, error) in
-            if let records = records {
-                var episodes = [TVMazeEpisode]()
-                for record in records {
-                    if let mazeId = record.value(forKey: "mazeId") as? Int {
-                        let episode = self.makeEpisode(mazeId, record)
-                        episodes.append(episode)
-                        self.episodeRecords[episode.id] = record
-                    }
-                }
-                episodes.sort()
-                episodeConsumer(episodes)
-            }
-        }
+        self.episodeConsumer = episodeConsumer
+        let queryOp = CKQueryOperation(query: query)
+        queryOp.recordFetchedBlock = recordFetched(record:)
+        queryOp.queryCompletionBlock = episodeFetchCompletion(cursor:error:)
+        privateDB.add(queryOp)
     }
         
     func makeEpisode(_ mazeId: Int, _ record: CKRecord) -> TVMazeEpisode {
